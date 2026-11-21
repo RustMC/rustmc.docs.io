@@ -1,0 +1,11 @@
+{#- One commit on RustMC main: its subject, summary and a link to the change. -#}
+{% extends "base.html" %}
+{% block title %}{{ page.extra.hash }} {{ page.title }} · {{ config.title }}{% endblock title %}
+{% block description %}{{ page.extra.summary }}{% endblock description %}
+{% block content %}
+<p><a href="{{ get_url(path='@/updates/_index.md') }}">All updates</a></p>
+<h1>{{ page.title }}</h1>
+<p class="update-meta"><time datetime="{{ page.extra.date }}">{{ page.extra.date }}</time><code>{{ page.extra.hash }}</code><span>{{ page.extra.author }}</span></p>
+<p class="prose">{{ page.extra.summary }}</p>
+<p><a class="button" href="{{ page.extra.url }}">View the change on GitHub</a></p>
+{% endblock content %}

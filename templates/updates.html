@@ -1,18 +1,46 @@
-{#- Every commit on RustMC main, generated from git history at build time. -#}
+{#- Every commit on RustMC main, generated from git history at build time and
+    split into numbered pages. -#}
 {% extends "base.html" %}
-{% block title %}{{ page.title }} · {{ config.title }}{% endblock title %}
-{% block description %}{{ page.description }}{% endblock description %}
+{% block title %}{{ section.title }}{% if paginator.current_index > 1 %}, page {{ paginator.current_index }}{% endif %} · {{ config.title }}{% endblock title %}
+{% block description %}{{ section.description }}{% endblock description %}
 {% block content %}
-{%- set updates = load_data(path="data/generated/updates.json") -%}
-<h1>{{ page.title }}</h1>
-<p class="lead">{{ updates | length }} commits on the main branch, newest first, read from the repository's git history at build time.</p>
-<ol class="updates" reversed>
-  {%- for update in updates %}
+{%- set first_number = (paginator.current_index - 1) * paginator.paginate_by + 1 -%}
+<h1>{{ section.title }}</h1>
+<p class="lead">All {{ section.extra.total }} commits on the main branch, newest first, read from the repository's git history at build time. Page {{ paginator.current_index }} of {{ paginator.number_pagers }}.</p>
+<div class="filter search-updates" hidden>
+  <label for="updates-search">Search all {{ section.extra.total }} commits</label>
+  <input id="updates-search" type="search" autocomplete="off" data-search="{{ get_url(path='generated/updates.json') }}">
+  <p class="muted" id="updates-search-status" aria-live="polite"></p>
+  <ol class="updates" id="updates-search-results"></ol>
+</div>
+<ol class="updates" id="updates-page" start="{{ first_number }}">
+  {%- for update in paginator.pages %}
   <li class="update">
-    <p class="update-meta"><time datetime="{{ update.date }}">{{ update.date }}</time><a href="{{ update.url }}"><code>{{ update.hash }}</code></a><span>{{ update.author }}</span></p>
-    <p class="update-subject">{{ update.subject }}</p>
-    <p class="update-summary">{{ update.summary }}</p>
+    <p class="update-meta"><time datetime="{{ update.extra.date }}">{{ update.extra.date }}</time><a href="{{ update.extra.url }}"><code>{{ update.extra.hash }}</code></a><span>{{ update.extra.author }}</span></p>
+    <p class="update-subject"><a href="{{ update.permalink }}">{{ update.title }}</a></p>
+    <p class="update-summary">{{ update.extra.summary }}</p>
   </li>
   {%- endfor %}
 </ol>
+{%- if paginator.number_pagers > 1 %}
+<nav class="pager" id="updates-pager" aria-label="Updates pages">
+  <ul>
+    {%- if paginator.previous %}
+    <li><a href="{{ paginator.previous }}" rel="prev">Previous</a></li>
+    {%- endif %}
+    {%- for number in range(start=1, end=paginator.number_pagers + 1) %}
+    {%- set near = number - paginator.current_index %}
+    {%- if number == 1 or number == paginator.number_pagers or (near >= -2 and near <= 2) %}
+    {%- if number == 1 %}{% set url = paginator.first %}{% else %}{% set url = paginator.base_url ~ number ~ "/" %}{% endif %}
+    <li>{% if number == paginator.current_index %}<a href="{{ url }}" aria-current="page">{{ number }}</a>{% else %}<a href="{{ url }}" aria-label="Page {{ number }}">{{ number }}</a>{% endif %}</li>
+    {%- elif near == -3 or near == 3 %}
+    <li><span class="pager-gap" aria-hidden="true">…</span></li>
+    {%- endif %}
+    {%- endfor %}
+    {%- if paginator.next %}
+    <li><a href="{{ paginator.next }}" rel="next">Next</a></li>
+    {%- endif %}
+  </ul>
+</nav>
+{%- endif %}
 {% endblock content %}

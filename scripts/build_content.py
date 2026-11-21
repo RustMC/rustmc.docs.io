@@ -9,7 +9,8 @@ Done: docs pages with their internal links rewritten, the configuration page
 from the example config, status from docs/STATUS.md, one update per commit
 reachable from the checked-out branch, newest first. Not done: nothing known.
 
-Writes only generated, git-ignored files: content/docs/ and data/generated/.
+Writes only generated, git-ignored files: content/docs/, content/updates/,
+data/generated/ and static/generated/.
 """
 
 import json
@@ -22,31 +23,97 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REPOSITORY = "https://github.com/RustMC/RustMC"
 DOCS_OUT = ROOT / "content" / "docs"
+UPDATES_OUT = ROOT / "content" / "updates"
+# The preview recording shown on the home page, copied from the RustMC repository.
+VIDEO_SOURCE = "assets/demos/rustmc-java-26.3-preview-2026-09-29.mp4"
+VIDEO_OUT = ROOT / "static" / "generated" / "preview.mp4"
+# Served compact commit list for searching all updates in the browser.
+SEARCH_OUT = ROOT / "static" / "generated" / "updates.json"
+# Commits per Updates page: short enough to scan, few enough pages to page through.
+UPDATES_PER_PAGE = 50
 DATA_OUT = ROOT / "data" / "generated"
 
-# (slug, title, source path in RustMC, short description); order is the menu order.
-DOCS = [
-    ("getting-started", "Getting started", "docs/DEVELOPMENT.md",
-     "Build, test and run RustMC locally."),
-    ("configuration", "Configuration", "config/rustmc.example.toml",
-     "Every configuration key, from the example file."),
-    ("commands", "Commands", "docs/COMMANDS.md",
-     "Commands, permission levels and where they run."),
-    ("architecture", "Architecture", "docs/ARCHITECTURE.md",
-     "How the server is put together."),
-    ("compatibility", "Compatibility", "docs/COMPATIBILITY.md",
-     "Supported editions and versions, with evidence."),
-    ("parity", "Vanilla parity", "docs/PARITY.md",
-     "How closely each feature matches vanilla, with numbers."),
-    ("roadmap", "Roadmap", "ROADMAP.md",
-     "Milestones and their exit evidence."),
-    ("status", "Status", "docs/STATUS.md",
-     "Done, in progress, known bugs and next steps."),
-    ("contributing", "Contributing", "CONTRIBUTING.md",
-     "How changes are proposed and reviewed."),
-    ("security", "Security", "SECURITY.md",
-     "How to report vulnerabilities."),
+# Docs groups in menu order, each with the pages it lists explicitly:
+# (slug, title, source path in RustMC, short description).
+GROUPS = [
+    ("Start", [
+        ("getting-started", "Getting started", "docs/DEVELOPMENT.md",
+         "Build, test and run RustMC locally."),
+        ("configuration", "Configuration", "config/rustmc.example.toml",
+         "Every configuration key, from the example file."),
+        ("commands", "Commands", "docs/COMMANDS.md",
+         "Commands, permission levels and where they run."),
+    ]),
+    ("Project", [
+        ("status", "Status", "docs/STATUS.md",
+         "Done, in progress, known bugs and next steps."),
+        ("roadmap", "Roadmap", "ROADMAP.md", "Milestones and their exit evidence."),
+        ("changelog", "Changelog", "CHANGELOG.md", "Notable changes by release."),
+        ("parity", "Vanilla parity", "docs/PARITY.md",
+         "How closely each feature matches vanilla, with numbers."),
+        ("compatibility", "Compatibility", "docs/COMPATIBILITY.md",
+         "Supported editions and versions, with evidence."),
+        ("benchmarks", "Benchmarks", "docs/BENCHMARKS.md",
+         "Measured speed and resource use, with method and hardware."),
+        ("testing", "Testing", "docs/TESTING.md", "How RustMC is tested."),
+    ]),
+    ("Internals", [
+        ("architecture", "Architecture", "docs/ARCHITECTURE.md",
+         "How the server is put together."),
+        ("review", "Code review", "docs/REVIEW.md",
+         "Every module, whether live play reaches it, and what was removed."),
+        ("provenance", "Provenance", "docs/PROVENANCE.md",
+         "Where every fact and dependency comes from."),
+        ("project-decisions", "Project decisions", "docs/PROJECT_DECISIONS.md",
+         "Decisions about scope and process."),
+    ]),
+    ("Decisions", "docs/decisions"),
+    ("Milestones", "docs/milestones"),
+    ("Research", "docs/research"),
+    ("Community", [
+        ("contributing", "Contributing", "CONTRIBUTING.md",
+         "How changes are proposed and reviewed."),
+        ("security", "Security", "SECURITY.md", "How to report vulnerabilities."),
+    ]),
 ]
+# Longest description shown on a docs card.
+DESCRIPTION_CHARS = 160
+
+
+def first_paragraph(text):
+    """The first prose paragraph after the title, shortened for a card."""
+    for block in re.sub(r"\A# [^\n]*\n+", "", text).split("\n\n"):
+        block = " ".join(block.split())
+        if block and not block.startswith(("#", "|", "-", "*", "```", "<", ">")):
+            plain = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", block).replace("`", "")
+            if len(plain) > DESCRIPTION_CHARS:
+                plain = plain[:DESCRIPTION_CHARS].rsplit(" ", 1)[0] + "…"
+            return plain
+    return ""
+
+
+def collect_docs(checkout):
+    """Every docs page as (group, slug, title, source, description)."""
+    docs = []
+    for group, pages in GROUPS:
+        if isinstance(pages, str):
+            folder = checkout / pages
+            if not folder.is_dir():
+                fail(f"{pages} is missing from the RustMC checkout")
+            for path in sorted(folder.glob("*.md")):
+                text = path.read_text(encoding="utf-8")
+                heading = re.match(r"# (.+)", text)
+                title = heading.group(1).strip() if heading else path.stem
+                source = f"{pages}/{path.name}"
+                docs.append((group, path.stem.lower(), title, source, first_paragraph(text)))
+        else:
+            docs.extend((group, *page) for page in pages)
+    slugs = [slug for _, slug, _, _, _ in docs]
+    duplicates = {slug for slug in slugs if slugs.count(slug) > 1}
+    if duplicates:
+        fail(f"duplicate docs slugs: {sorted(duplicates)}")
+    return docs
+
 
 # Markdown link target: ](path#anchor) where path is relative.
 LINK = re.compile(r"\]\((?!https?://|mailto:|#)([^)\s#]+)(#[^)\s]*)?\)")
@@ -76,9 +143,12 @@ def git(checkout, *args):
     return result.stdout
 
 
+PAGES = {}
+
+
 def rewrite_links(text, source):
     """Points links at the matching site page, or at the file on GitHub."""
-    pages = {path: slug for slug, _, path, _ in DOCS}
+    pages = PAGES
     base = Path(source).parent
 
     def replace(match):
@@ -99,7 +169,7 @@ def rewrite_links(text, source):
     return LINK.sub(replace, text)
 
 
-def front_matter(title, weight, description, source):
+def front_matter(title, weight, description, source, group):
     return (
         "+++\n"
         f"title = {json.dumps(title)}\n"
@@ -107,11 +177,12 @@ def front_matter(title, weight, description, source):
         f"weight = {weight}\n"
         "[extra]\n"
         f"source = {json.dumps(source)}\n"
+        f"group = {json.dumps(group)}\n"
         "+++\n\n"
     )
 
 
-def docs_pages(checkout):
+def docs_pages(checkout, docs):
     if DOCS_OUT.exists():
         shutil.rmtree(DOCS_OUT)
     DOCS_OUT.mkdir(parents=True)
@@ -120,7 +191,7 @@ def docs_pages(checkout):
         'page_template = "doc.html"\n+++\n',
         encoding="utf-8",
     )
-    for weight, (slug, title, source, description) in enumerate(DOCS, start=1):
+    for weight, (group, slug, title, source, description) in enumerate(docs, start=1):
         path = checkout / source
         if not path.is_file():
             fail(f"{source} is missing from the RustMC checkout")
@@ -136,7 +207,7 @@ def docs_pages(checkout):
             body = re.sub(r"\A# [^\n]*\n+", "", text)
             body = rewrite_links(body, source)
         (DOCS_OUT / f"{slug}.md").write_text(
-            front_matter(title, weight, description, source) + body, encoding="utf-8"
+            front_matter(title, weight, description, source, group) + body, encoding="utf-8"
         )
 
 
@@ -151,7 +222,12 @@ def status(checkout):
         if required not in sections:
             fail(f"docs/STATUS.md has no '## {required}' section")
     updated = re.search(r"^Last updated: (.+?)\.?$", text, re.M)
+    cargo = (checkout / "crates" / "rustmc-server" / "Cargo.toml").read_text(encoding="utf-8")
+    version = re.search(r'^version = "([^"]+)"', cargo, re.M)
+    if not version:
+        fail("crates/rustmc-server/Cargo.toml has no version")
     return {
+        "version": version.group(1),
         "phases_complete": done,
         "phases_total": total,
         "percent": round(100 * done / total),
@@ -213,16 +289,57 @@ def updates(checkout):
     return entries
 
 
+def update_pages(entries):
+    """One page per commit, so the Updates section can paginate them."""
+    if UPDATES_OUT.exists():
+        shutil.rmtree(UPDATES_OUT)
+    UPDATES_OUT.mkdir(parents=True)
+    (UPDATES_OUT / "_index.md").write_text(
+        "+++\n"
+        'title = "Updates"\n'
+        'description = "Every commit on the RustMC main branch, newest first."\n'
+        'template = "updates.html"\n'
+        'page_template = "update.html"\n'
+        'sort_by = "weight"\n'
+        f"paginate_by = {UPDATES_PER_PAGE}\n"
+        "[extra]\n"
+        f"total = {len(entries)}\n"
+        "+++\n",
+        encoding="utf-8",
+    )
+    for weight, entry in enumerate(entries, start=1):
+        extra = {key: entry[key] for key in ("hash", "url", "date", "author", "summary")}
+        (UPDATES_OUT / f"{entry['hash']}.md").write_text(
+            "+++\n"
+            f"title = {json.dumps(entry['subject'])}\n"
+            f"weight = {weight}\n"
+            "[extra]\n"
+            + "".join(f"{key} = {json.dumps(value)}\n" for key, value in extra.items())
+            + "+++\n",
+            encoding="utf-8",
+        )
+
+
 def main():
     if len(sys.argv) != 2:
         fail("usage: build_content.py <path-to-RustMC-checkout>")
     checkout = Path(sys.argv[1]).resolve()
-    docs_pages(checkout)
+    docs = collect_docs(checkout)
+    PAGES.update({source: slug for _, slug, _, source, _ in docs})
+    docs_pages(checkout, docs)
     DATA_OUT.mkdir(parents=True, exist_ok=True)
     (DATA_OUT / "status.json").write_text(json.dumps(status(checkout), indent=1), encoding="utf-8")
     entries = updates(checkout)
-    (DATA_OUT / "updates.json").write_text(json.dumps(entries, indent=1), encoding="utf-8")
-    print(f"build_content: {len(DOCS)} docs pages, {len(entries)} updates")
+    update_pages(entries)
+    SEARCH_OUT.parent.mkdir(parents=True, exist_ok=True)
+    video = checkout / VIDEO_SOURCE
+    if not video.is_file():
+        fail(f"{VIDEO_SOURCE} is missing from the RustMC checkout")
+    shutil.copyfile(video, VIDEO_OUT)
+    SEARCH_OUT.write_text(json.dumps(
+        [[e["hash"], e["date"], e["subject"], e["url"]] for e in entries]
+    ), encoding="utf-8")
+    print(f"build_content: {len(docs)} docs pages, {len(entries)} updates")
 
 
 if __name__ == "__main__":

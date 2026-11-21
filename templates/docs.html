@@ -1,12 +1,17 @@
-{#- Documentation index: one card per page pulled from the RustMC repository. -#}
+{#- Documentation index: every page pulled from the RustMC repository, grouped. -#}
 {% extends "base.html" %}
 {% block title %}{{ section.title }} · {{ config.title }}{% endblock title %}
 {% block content %}
 <h1>{{ section.title }}</h1>
-<p class="lead">These pages come straight from the RustMC repository and are rebuilt every hour.</p>
-<ul class="grid">
-  {%- for page in section.pages %}
-  <li><a class="card card-link" href="{{ page.permalink }}"><span class="card-title">{{ page.title }}</span><br><span class="muted">{{ page.description }}</span></a></li>
-  {%- endfor %}
-</ul>
+<p class="lead">{{ section.pages | length }} pages, straight from the RustMC repository and rebuilt every hour.</p>
+{%- for group in config.extra.doc_groups %}
+<section aria-labelledby="group-{{ loop.index }}">
+  <h2 id="group-{{ loop.index }}" class="group-heading">{{ load_data(path="static/icons/" ~ group.icon ~ ".svg", format="plain") | safe }}{{ group.name }}</h2>
+  <ul class="grid">
+    {%- for page in section.pages %}{% if page.extra.group == group.name %}
+    <li><a class="card card-link" href="{{ page.permalink }}"><span class="card-title">{{ page.title }}</span><br><span class="muted">{{ page.description }}</span></a></li>
+    {%- endif %}{% endfor %}
+  </ul>
+</section>
+{%- endfor %}
 {% endblock content %}

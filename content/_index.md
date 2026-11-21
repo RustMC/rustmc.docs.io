@@ -1,6 +1,13 @@
 +++
 title = "RustMC"
 template = "index.html"
+
+[extra]
+# Release stage shown on the home page badge; README and SECURITY.md in the
+# RustMC repository describe the project as pre-alpha.
+stage = "Pre-alpha preview"
+headline = "A Minecraft server,"
+headline_accent = "written in Rust."
 +++
 
 RustMC is an open-source Minecraft Java Edition 26.3 server written in Rust. It
