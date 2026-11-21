@@ -1,0 +1,18 @@
+{#- Every commit on RustMC main, generated from git history at build time. -#}
+{% extends "base.html" %}
+{% block title %}{{ page.title }} · {{ config.title }}{% endblock title %}
+{% block description %}{{ page.description }}{% endblock description %}
+{% block content %}
+{%- set updates = load_data(path="data/generated/updates.json") -%}
+<h1>{{ page.title }}</h1>
+<p class="lead">{{ updates | length }} commits on the main branch, newest first, read from the repository's git history at build time.</p>
+<ol class="updates" reversed>
+  {%- for update in updates %}
+  <li class="update">
+    <p class="update-meta"><time datetime="{{ update.date }}">{{ update.date }}</time><a href="{{ update.url }}"><code>{{ update.hash }}</code></a><span>{{ update.author }}</span></p>
+    <p class="update-subject">{{ update.subject }}</p>
+    <p class="update-summary">{{ update.summary }}</p>
+  </li>
+  {%- endfor %}
+</ol>
+{% endblock content %}

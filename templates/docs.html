@@ -1,0 +1,12 @@
+{#- Documentation index: one card per page pulled from the RustMC repository. -#}
+{% extends "base.html" %}
+{% block title %}{{ section.title }} · {{ config.title }}{% endblock title %}
+{% block content %}
+<h1>{{ section.title }}</h1>
+<p class="lead">These pages come straight from the RustMC repository and are rebuilt every hour.</p>
+<ul class="grid">
+  {%- for page in section.pages %}
+  <li><a class="card card-link" href="{{ page.permalink }}"><span class="card-title">{{ page.title }}</span><br><span class="muted">{{ page.description }}</span></a></li>
+  {%- endfor %}
+</ul>
+{% endblock content %}
