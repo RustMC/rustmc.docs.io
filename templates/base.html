@@ -1,0 +1,59 @@
+{#- Shared page frame: header, navigation, main landmark and footer. -#}
+{%- set section_path = current_path | default(value="/") -%}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ config.title }}{% endblock title %}</title>
+  <meta name="description" content="{% block description %}{{ config.description }}{% endblock description %}">
+  <link rel="stylesheet" href="{{ get_url(path='css/site.css') }}">
+  <script src="{{ get_url(path='js/theme.js') }}"></script>
+  <script src="{{ get_url(path='js/site.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="{{ get_url(path='/') }}">
+        <svg class="logo" viewBox="0 0 8 8" aria-hidden="true" focusable="false">
+          <rect class="grass" x="0" y="0" width="8" height="3"/>
+          <rect class="dirt" x="0" y="3" width="8" height="5"/>
+          <rect class="grass" x="1" y="3" width="1" height="1"/>
+          <rect class="grass" x="5" y="3" width="2" height="1"/>
+          <rect class="dirt-dark" x="2" y="5" width="1" height="1"/>
+          <rect class="dirt-dark" x="6" y="6" width="1" height="1"/>
+          <rect class="dirt-dark" x="4" y="7" width="1" height="1"/>
+        </svg>
+        <span>RustMC</span>
+      </a>
+      <div class="header-end">
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="{{ get_url(path='/') }}"{% if section_path == "/" %} aria-current="page"{% endif %}>Home</a></li>
+          <li><a href="{{ get_url(path='@/docs/_index.md') }}"{% if "/docs/" in section_path %} aria-current="page"{% endif %}>Docs</a></li>
+          <li><a href="{{ get_url(path='@/updates/_index.md') }}"{% if "/updates/" in section_path %} aria-current="page"{% endif %}>Updates</a></li>
+          <li><a href="{{ get_url(path='@/sponsor.md') }}"{% if section_path == "/sponsor/" %} aria-current="page"{% endif %}>Sponsor</a></li>
+          <li><a href="{{ config.extra.repository }}">GitHub</a></li>
+        </ul>
+      </nav>
+      <button class="theme-toggle" type="button" aria-label="Dark theme" hidden>
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2" y="2" width="12" height="12"/><rect class="toggle-cut" x="8" y="2" width="6" height="12" fill-opacity="0.35"/></svg>
+        <span data-label>Light</span>
+      </button>
+      </div>
+    </div>
+  </header>
+  <main id="content">
+    <div class="wrap">
+      {% block content %}{% endblock content %}
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>RustMC is open-source software under the Apache-2.0 license. <a href="{{ config.extra.site_repository }}">Source of this site</a>.</p>
+      <p>Not affiliated with Mojang or Microsoft.</p>
+    </div>
+  </footer>
+</body>
+</html>

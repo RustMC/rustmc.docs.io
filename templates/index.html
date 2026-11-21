@@ -1,0 +1,54 @@
+{#- Home: what RustMC is, its measured status and where to go next. -#}
+{% extends "base.html" %}
+{% block content %}
+{%- set status = load_data(path="data/generated/status.json") -%}
+{%- set updates = get_section(path="updates/_index.md", metadata_only=true) -%}
+{%- set docs = get_section(path="docs/_index.md") -%}
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="hero-text">
+    <p class="badge"><span class="badge-dot" aria-hidden="true"></span>{{ section.extra.stage }} · v{{ status.version }} · Java Edition 26.3</p>
+    <h1 id="hero-heading" class="headline">{{ section.extra.headline }}<span>{{ section.extra.headline_accent }}</span></h1>
+    <div class="lead">{{ section.content | safe }}</div>
+    <div class="actions">
+      <a class="button" href="{{ get_url(path='@/docs/getting-started.md') }}">Get started</a>
+      <a class="button button-quiet" href="{{ config.extra.repository }}">View on GitHub</a>
+    </div>
+  </div>
+  <figure class="hero-media">
+    <video src="{{ get_url(path='generated/preview.mp4') }}" autoplay muted loop playsinline disablepictureinpicture preload="auto" aria-describedby="preview-caption"></video>
+    <figcaption id="preview-caption">A Java 26.3 client exploring RustMC's terrain preview, recorded on 29 September 2026.</figcaption>
+  </figure>
+</section>
+<ul class="stats">
+  <li class="stat"><span class="stat-value">{{ status.percent }}%</span><span class="stat-label">{{ status.phases_complete }} of {{ status.phases_total }} plan phases complete</span></li>
+  <li class="stat"><span class="stat-value">{{ updates.extra.total }}</span><span class="stat-label">commits on main</span></li>
+  <li class="stat"><span class="stat-value">{{ docs.pages | length }}</span><span class="stat-label">documentation pages</span></li>
+</ul>
+
+<section aria-labelledby="status-heading">
+  <h2 id="status-heading">Current status</h2>
+  <div class="card">
+    <p class="progress-label">
+      <span>{{ status.phases_complete }} of {{ status.phases_total }} plan phases complete</span>
+      <span>{{ status.percent }}%</span>
+    </p>
+    <progress max="{{ status.phases_total }}" value="{{ status.phases_complete }}" aria-label="Plan phases complete">{{ status.percent }}%</progress>
+    <p class="muted">A phase counts only when its exit tests pass{% if status.updated %}; status as of {{ status.updated }}{% endif %}.</p>
+    <h3>What works</h3>
+    <div class="prose">{{ status.done | markdown | safe }}</div>
+    <h3>In progress</h3>
+    <div class="prose">{{ status.in_progress | markdown | safe }}</div>
+    <p><a href="{{ get_url(path='@/docs/status.md') }}">Full status, known bugs and next steps</a></p>
+  </div>
+</section>
+
+<section aria-labelledby="explore-heading">
+  <h2 id="explore-heading">Explore</h2>
+  <ul class="grid">
+    <li><a class="card card-link" href="{{ get_url(path='@/docs/_index.md') }}"><span class="card-title">Documentation</span><br><span class="muted">Getting started, configuration, architecture and parity.</span></a></li>
+    <li><a class="card card-link" href="{{ get_url(path='@/updates/_index.md') }}"><span class="card-title">Updates</span><br><span class="muted">Every change on the main branch.</span></a></li>
+    <li><a class="card card-link" href="{{ config.extra.repository }}"><span class="card-title">GitHub</span><br><span class="muted">Source code, issues and pull requests.</span></a></li>
+    <li><a class="card card-link" href="{{ get_url(path='@/sponsor.md') }}"><span class="card-title">Sponsor</span><br><span class="muted">Support development through GitHub Sponsors.</span></a></li>
+  </ul>
+</section>
+{% endblock content %}

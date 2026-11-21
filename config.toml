@@ -1,0 +1,50 @@
+# Zola configuration for the RustMC documentation site, served by GitHub Pages
+# under the repository path.
+base_url = "https://rustmc.github.io/rustmc.docs.io"
+title = "RustMC"
+description = "RustMC: a Minecraft Java Edition 26.3 server written in Rust."
+default_language = "en"
+compile_sass = false
+minify_html = true
+build_search_index = false
+generate_feeds = false
+
+[markdown]
+smart_punctuation = false
+external_links_no_follow = false
+external_links_no_referrer = true
+
+[extra]
+repository = "https://github.com/RustMC/RustMC"
+site_repository = "https://github.com/RustMC/rustmc.docs.io"
+sponsors = "https://github.com/sponsors/neonjava"
+
+# Docs groups in menu order with the pixel icon (static/icons/) each shows;
+# names match the groups scripts/build_content.py assigns.
+[[extra.doc_groups]]
+name = "Start"
+icon = "pickaxe"
+
+[[extra.doc_groups]]
+name = "Project"
+icon = "map"
+
+[[extra.doc_groups]]
+name = "Internals"
+icon = "gear"
+
+[[extra.doc_groups]]
+name = "Decisions"
+icon = "book"
+
+[[extra.doc_groups]]
+name = "Milestones"
+icon = "flag"
+
+[[extra.doc_groups]]
+name = "Research"
+icon = "flask"
+
+[[extra.doc_groups]]
+name = "Community"
+icon = "heart"

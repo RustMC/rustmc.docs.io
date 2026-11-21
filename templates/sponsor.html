@@ -1,0 +1,36 @@
+{#- Sponsoring: the GitHub Sponsors link, tiers and sponsors from data/sponsors.json. -#}
+{% extends "base.html" %}
+{% block title %}{{ page.title }} · {{ config.title }}{% endblock title %}
+{% block description %}{{ page.description }}{% endblock description %}
+{% block content %}
+{%- set sponsors = load_data(path="data/sponsors.json") -%}
+<h1>{{ page.title }}</h1>
+<div class="prose">{{ page.content | safe }}</div>
+<p><a class="button" href="{{ sponsors.url }}">Sponsor neonjava on GitHub</a></p>
+
+<h2>Tiers</h2>
+{%- if sponsors.tiers | length > 0 %}
+<ul class="grid">
+  {%- for tier in sponsors.tiers %}
+  <li class="card">
+    <h3>{{ tier.name }}</h3>
+    <p><strong>${{ tier.monthlyPriceInDollars }}{% if tier.isOneTime %} once{% else %} a month{% endif %}</strong></p>
+    <div class="prose">{{ tier.description | markdown | safe }}</div>
+  </li>
+  {%- endfor %}
+</ul>
+{%- else %}
+<p>The GitHub Sponsors listing has no published tiers yet; any amount can be given there directly.</p>
+{%- endif %}
+
+<h2>Sponsors</h2>
+{%- if sponsors.sponsors | length > 0 %}
+<ul>
+  {%- for sponsor in sponsors.sponsors %}
+  <li><a href="{{ sponsor.url }}">{{ sponsor.login }}</a></li>
+  {%- endfor %}
+</ul>
+{%- else %}
+<p>No public sponsors yet.</p>
+{%- endif %}
+{% endblock content %}

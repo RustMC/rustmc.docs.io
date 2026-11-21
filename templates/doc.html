@@ -1,0 +1,29 @@
+{#- One documentation page, with the grouped docs menu and a link to its source. -#}
+{% extends "base.html" %}
+{% block title %}{{ page.title }} · {{ config.title }}{% endblock title %}
+{% block description %}{{ page.description }}{% endblock description %}
+{% block content %}
+{%- set docs = get_section(path="docs/_index.md") -%}
+<div class="docs">
+  <nav class="docs-nav" aria-label="Documentation">
+    <div class="filter" hidden>
+      <label for="docs-filter">Filter pages</label>
+      <input id="docs-filter" type="search" autocomplete="off" data-filter=".docs-nav li">
+    </div>
+    {%- for group in config.extra.doc_groups %}
+    <p class="docs-nav-group">{{ load_data(path="static/icons/" ~ group.icon ~ ".svg", format="plain") | safe }}{{ group.name }}</p>
+    <ul>
+      {%- for item in docs.pages %}{% if item.extra.group == group.name %}
+      <li><a href="{{ item.permalink }}"{% if item.path == page.path %} aria-current="page"{% endif %}>{{ item.title }}</a></li>
+      {%- endif %}{% endfor %}
+    </ul>
+    {%- endfor %}
+  </nav>
+  <article class="prose">
+    <p class="crumb">{{ page.extra.group }}</p>
+    <h1>{{ page.title }}</h1>
+    {{ page.content | safe }}
+    <p class="source">This page is <a href="{{ config.extra.repository }}/blob/main/{{ page.extra.source }}">{{ page.extra.source }}</a> in the RustMC repository.</p>
+  </article>
+</div>
+{% endblock content %}
