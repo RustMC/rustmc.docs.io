@@ -6,8 +6,10 @@ The website of [RustMC](https://github.com/RustMC/RustMC), published at
 Every page about RustMC is generated from the RustMC repository at build
 time: the documentation pages, the status on the home page (from
 `docs/STATUS.md`) and the Updates page (one entry per commit on `main`). The
-Sponsor page reads `data/sponsors.json`, which the build refreshes from the
-GitHub Sponsors listing. Nothing about the project is typed into this
+Sponsor page reads `data/sponsors.json`, written by `scripts/fetch_sponsors.py`
+from the GitHub Sponsors listing; the build refreshes it when the repository
+has a `SPONSORS_TOKEN` secret (a read-only personal token), because the
+workflow's own token cannot read a user's Sponsors listing. Nothing about the project is typed into this
 repository by hand.
 
 ## Why Zola

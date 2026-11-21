@@ -35,9 +35,13 @@ jobs:
           path: upstream
           fetch-depth: 0
           persist-credentials: false
+      # The workflow token cannot read a user's Sponsors listing; with a
+      # SPONSORS_TOKEN secret (read-only personal token) the data is refreshed,
+      # otherwise the committed data/sponsors.json is used.
       - name: Refresh sponsors
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
+        if: env.GH_TOKEN != ''
         run: python3 scripts/fetch_sponsors.py
       - name: Install Zola
         run: |
