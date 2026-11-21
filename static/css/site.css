@@ -1,8 +1,8 @@
 /*
  * RustMC site styles. Every colour is a token in the theme blocks below; no
  * other file sets a colour. The light theme takes its palette from the
- * Overworld (grass, dirt, stone); the dark theme from the End (void, end
- * stone, purpur). The dark theme follows the system setting unless
+ * Overworld (grass, dirt, stone); the dark theme from the End portal (black
+ * void with scattered teal specks, end-stone highlights). The dark theme follows the system setting unless
  * the reader picks a theme with the header toggle (data-theme on <html>).
  * scripts/check_site.py checks every text pair in both themes against WCAG AA.
  */
@@ -24,6 +24,9 @@
   --color-stone: #9a978f;
   --color-focus: #1d58b5;
   --color-shadow: #1a1f1c14;
+  --color-speck-a: #f7f6f2;
+  --color-speck-b: #f7f6f2;
+  --color-speck-c: #f7f6f2;
   color-scheme: light;
 
   --space-1: 0.25rem;
@@ -41,45 +44,51 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-page: #0f0b16;
-    --color-surface: #18121f;
-    --color-raised: #231a2e;
-    --color-text: #f1ecd2;
-    --color-muted: #b9b0c9;
-    --color-border: #2f2641;
-    --color-border-strong: #54446b;
-    --color-accent: #cda8f2;
-    --color-accent-strong: #e4cffa;
-    --color-on-accent: #1a0f26;
-    --color-header: #18121ff0;
-    --color-grass: #a77fd0;
-    --color-dirt: #d6cf96;
-    --color-dirt-dark: #b2aa72;
-    --color-stone: #3d3150;
+    --color-page: #050709;
+    --color-surface: #0b0f12;
+    --color-raised: #121a1e;
+    --color-text: #e4efec;
+    --color-muted: #9db3ad;
+    --color-border: #1c2a2c;
+    --color-border-strong: #2f4a4b;
+    --color-accent: #5fe0cc;
+    --color-accent-strong: #a6f3e7;
+    --color-on-accent: #04201c;
+    --color-header: #0b0f12f0;
+    --color-grass: #3fc2ad;
+    --color-dirt: #d9d39b;
+    --color-dirt-dark: #b3ad78;
+    --color-stone: #1d3a3b;
     --color-focus: #f2d46b;
-    --color-shadow: #00000080;
+    --color-shadow: #00000099;
+    --color-speck-a: #174b47;
+    --color-speck-b: #2b7d71;
+    --color-speck-c: #1d3a52;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --color-page: #0f0b16;
-  --color-surface: #18121f;
-  --color-raised: #231a2e;
-  --color-text: #f1ecd2;
-  --color-muted: #b9b0c9;
-  --color-border: #2f2641;
-  --color-border-strong: #54446b;
-  --color-accent: #cda8f2;
-  --color-accent-strong: #e4cffa;
-  --color-on-accent: #1a0f26;
-  --color-header: #18121ff0;
-  --color-grass: #a77fd0;
-  --color-dirt: #d6cf96;
-  --color-dirt-dark: #b2aa72;
-  --color-stone: #3d3150;
+  --color-page: #050709;
+  --color-surface: #0b0f12;
+  --color-raised: #121a1e;
+  --color-text: #e4efec;
+  --color-muted: #9db3ad;
+  --color-border: #1c2a2c;
+  --color-border-strong: #2f4a4b;
+  --color-accent: #5fe0cc;
+  --color-accent-strong: #a6f3e7;
+  --color-on-accent: #04201c;
+  --color-header: #0b0f12f0;
+  --color-grass: #3fc2ad;
+  --color-dirt: #d9d39b;
+  --color-dirt-dark: #b3ad78;
+  --color-stone: #1d3a3b;
   --color-focus: #f2d46b;
-  --color-shadow: #00000080;
+  --color-shadow: #00000099;
+  --color-speck-a: #174b47;
+  --color-speck-b: #2b7d71;
+  --color-speck-c: #1d3a52;
   color-scheme: dark;
 }
 
@@ -91,7 +100,17 @@
 
 body {
   margin: 0;
-  background: var(--color-page);
+  background-color: var(--color-page);
+  /* Scattered specks of the End portal void; in the light theme the specks
+     share the page colour and vanish. Four sparse layers with prime spacing avoid a visible grid. */
+  background-image:
+    radial-gradient(var(--color-speck-a) 1px, transparent 1.5px),
+    radial-gradient(var(--color-speck-b) 1px, transparent 1.5px),
+    radial-gradient(var(--color-speck-c) 1.5px, transparent 2px),
+    radial-gradient(var(--color-speck-b) 1px, transparent 1.5px);
+  background-size: 137px 149px, 211px 193px, 307px 281px, 401px 367px;
+  background-position: 0 0, 67px 101px, 151px 43px, 233px 199px;
+  background-attachment: fixed;
   color: var(--color-text);
   font-family: var(--font-body);
   line-height: 1.65;
@@ -381,6 +400,7 @@ pre code {
 
 .hero-media video {
   display: block;
+  pointer-events: none;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: var(--color-raised);

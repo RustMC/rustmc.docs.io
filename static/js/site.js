@@ -1,7 +1,8 @@
 /*
  * Small interactive helpers, all optional: the pages work without them.
  * Done: docs menu filter, search across every commit on the Updates page,
- * copy buttons on code blocks. Each control stays hidden unless this runs.
+ * copy buttons on code blocks, and stopping the looping home video for
+ * readers whose system asks for reduced motion. Each control stays hidden unless this runs.
  */
 (function () {
   function filterDocs(input) {
@@ -108,7 +109,18 @@
     });
   }
 
+  function respectReducedMotion() {
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    document.querySelectorAll("video[autoplay]").forEach(function (video) {
+      video.pause();
+      video.removeAttribute("autoplay");
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    respectReducedMotion();
     document.querySelectorAll("[data-filter]").forEach(function (input) {
       input.closest(".filter").hidden = false;
       filterDocs(input);
